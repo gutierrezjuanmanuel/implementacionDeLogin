@@ -5,8 +5,14 @@ const FileStore = require("session-file-store");
 //No se olviden de inicializarlo!:
 const fileStore = FileStore(session);
 const MongoStore = require("connect-mongo");
+const exphbs = require("express-handlebars");
 const userRouter = require("./routes/user.router.js");
 const sessionRouter = require("./routes/sessions.router.js");
+const viewsRouter = require("./routes/views.router.js");
+
+//Passport: 
+const passport = require("passport");
+const initializePassport = require("./config/passport.config.js");
 
 // import express from "express";
 // import cookieParser from "cookie-parser";
@@ -15,8 +21,17 @@ const app = express();
 const PUERTO = 8081;
 require("../database.js");
 
+//Express-Handlebars
+app.engine("handlebars", exphbs.engine());
+app.set("view engine", "handlebars");
+app.set("views", "./src/views");
+
+
 //Middleware
 // app.use(cookieParser());
+app.use(express.static("./src/public"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const miAltaClaveSecreta = "TinkiWinki";
 app.use(cookieParser(miAltaClaveSecreta));
 //Modificación que hacemos para firmar cookies. 
@@ -44,8 +59,14 @@ app.use(session({
 
 }))
 
+/////Cambios Passport 
+initializePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use("/api/users", userRouter);
 app.use("/api/sessions", sessionRouter);
+app.use("/", viewsRouter);
 
 //Login de usuario con Session: 
 
