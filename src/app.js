@@ -5,14 +5,15 @@ const FileStore = require("session-file-store");
 //No se olviden de inicializarlo!:
 const fileStore = FileStore(session);
 const MongoStore = require("connect-mongo");
-//const userRouter = require("./routes/user.router.js");
-//const sessionRouter = require("./routes/sessions.router.js");
+const userRouter = require("./routes/user.router.js");
+const sessionRouter = require("./routes/sessions.router.js");
 
 // import express from "express";
 // import cookieParser from "cookie-parser";
 
 const app = express(); 
-const PUERTO = 8081; 
+const PUERTO = 8081;
+require("../database.js");
 
 //Middleware
 // app.use(cookieParser());
@@ -38,12 +39,13 @@ app.use(session({
     //3) Utilizando Mongo Storage: 
 
     store: MongoStore.create({
-        mongoUrl: "mongodb+srv://gutierrezmanueljuan:jmg35960568982@cluster0.vuvwwx5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", ttl: 100
+        mongoUrl: "mongodb+srv://gutierrezmanueljuan:jmg35960568982@cluster0.vuvwwx5.mongodb.net/e-commerce?retryWrites=true&w=majority&appName=Cluster0", ttl: 100
     })
 
 }))
-//app.use("/api/users", userRouter);
-//app.use("/api/sessions", sessionRouter);
+
+app.use("/api/users", userRouter);
+app.use("/api/sessions", sessionRouter);
 
 //Login de usuario con Session: 
 
