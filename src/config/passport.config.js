@@ -1,31 +1,26 @@
-//Instalamos: npm i passport passport-local
+import passport from "passport";
+import local from "passport-local";
 
-//Importamos los módulos:
-const passport = require("passport");
-const local = require("passport-local");
-
-//Traemos el UserModel y las funciones de bcrypt
-const UserModel = require("../models/user.model.js");
-const { createHash, isValidPassword } = require("../utils/hashBcrypt.js");
-
-//Passport con GitHub:
-const GitHubStrategy = require("passport-github2");
+import UserModel from "../models/user.js";
+import { createHash, isValidPassword } from "../utils/hashbcrypt.js";
 
 const LocalStrategy = local.Strategy;
 
-const initializePassport = () => {
-
+export const initializePassport = () => {
     passport.use("register", new LocalStrategy({
         //Le digo que quiero acceder al objeto request
         passReqToCallback: true,
         usernameField: "email"
     }, async (req, username, password, done) => {
-        const { first_name, last_name, email, age } = req.body;
+        const { first_name, last_name, age, email } = req.body;
+
         try {
-            //Verificamos si ya existe un registro con ese mail
+            //Verificamos si ya existe un registro con ese email
             let user = await UserModel.findOne({ email });
             if (user) return done(null, false);
-            //Si no existe, voy a crear un registro de usuario nuevo
+
+            //Si no existe, lo voy a crear 
+
             let newUser = {
                 first_name,
                 last_name,
@@ -35,72 +30,43 @@ const initializePassport = () => {
             }
 
             let result = await UserModel.create(newUser);
-            //Si todo resulta bien, podemos mandar done con el usuario generado. 
             return done(null, result);
         } catch (error) {
             return done(error);
         }
     }))
 
-    //Agregamos otra estrategia, ahora para el "login":
+    //Estrategia de Login: 
+
     passport.use("login", new LocalStrategy({
         usernameField: "email"
     }, async (email, password, done) => {
         try {
-            //Primero verifico si existe un usuario con ese mail.
+            //Primero verificamos si existe un usuario con ese email
             const user = await UserModel.findOne({ email });
             if (!user) {
-                console.log("Este usuario no existeeee ahhh");
+                console.log("Este usuario no existe, quien te conoce papá");
                 return done(null, false);
             }
-            //Si existe verifico la contraseña: 
-            if (!isValidPassword(password, user)) return done(null, false);
-            return done(null, user);
+            //Si existe verifico la contraseña
+            if (!isValidPassword(password, user)) {
+                return done(null, false);
+            }
 
+            return done(null, user);
         } catch (error) {
             return done(error);
         }
     }))
+
+    //Proceso de serialización: se encarga de convertir el objeto de usuario en una cadena que se puede almacenar en la sesión. 
 
     passport.serializeUser((user, done) => {
         done(null, user._id);
-    });
-
-    passport.deserializeUser(async (id, done) => {
-        let user = await UserModel.findById({ _id: id });
-        done(null, user);
     })
 
-    //Acá desarrollamos nuestra nueva estrategia con GitHub: 
-    passport.use("github", new GitHubStrategy({
-        clientID: "Iv1.d9b104211fca8dbb",
-        clientSecret: "fdba2d03e81e295c0b9fe60f72038e2ec6a91faa",
-        callbackURL: "http://localhost:8081/api/sessions/githubcallback"
-    }, async (accessToken, refreshToken, profile, done) => {
-        console.log("Profile: ", profile);
-        try {
-            let user = await UserModel.findOne({ email: profile._json.email })
-
-            if (!user) {
-                let newUser = {
-                    first_name: profile._json.name,
-                    last_name: "",
-                    age: 36,
-                    email: profile._json.email,
-                    password: ""
-                }
-                let result = await UserModel.create(newUser);
-                done(null, result)
-            } else {
-                done(null, user);
-            }
-
-        } catch (error) {
-            return done(error);
-        }
-
-    }))
+    passport.deserializeUser( async (id, done) => {
+        let user = await UserModel.findById({_id:id});
+        done(null, user);
+    })
 }
-
-
-module.exports = initializePassport;

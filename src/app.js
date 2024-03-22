@@ -1,51 +1,56 @@
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const session = require("express-session");
-const MongoStore = require("connect-mongo");
-const exphbs = require("express-handlebars");
-const userRouter = require("./routes/user.router.js");
-const sessionRouter = require("./routes/sessions.router.js");
-const viewsRouter = require("./routes/views.router.js");
-//Passport: 
-const passport = require("passport");
-const initializePassport = require("./config/passport.config.js");
-//////////
+import express from "express";
 const app = express();
 const PUERTO = 8081;
-require("./database.js");
+import exphbs from "express-handlebars";
+import multer from "multer";
+import passport from "passport";
+import session from "express-session";
+import { initializePassport } from "./config/passport.config.js";
+import imagenRouter from "./routes/imagen.router.js";
+import viewsRouter from "./routes/views.router.js";
+import sessionRouter from "./routes/session.router.js";
+import "../src/database.js";
 
-//Express-Handlebars
+//Express-handlebars
 app.engine("handlebars", exphbs.engine());
 app.set("view engine", "handlebars");
 app.set("views", "./src/views");
 
+
 //Middleware
-app.use(express.static("./src/public"));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(express.urlencoded({extended: true}));
+app.use(express.static("./src/public"));
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "./src/public/img");
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+})
+app.use(multer({storage}).single("image"));
+//Session
+app.use(session({
+    secret:"mi_secreto",
+    resave: false,
+    saveUninitialized: false
+}))
+//Passport
+app.use(passport.initialize());
+app.use(passport.session());
+initializePassport();
 
-// app.use(session({
-//     secret:"secretCoder",
-//     resave: true, 
-//     saveUninitialized:true,   
-//     store: MongoStore.create({
-// mongoUrl: "mongodb+srv://gutierrezmanueljuan:jmg35960568982@cluster0.vuvwwx5.mongodb.net/e-commerce?retryWrites=true&w=majority&appName=Cluster0", ttl: 100
-//})
-// }))
-// /////Cambios Passport 
-// initializePassport();
-// app.use(passport.initialize());
-// app.use(passport.session());
 
+//Rutas
 
-app.use("/api/users", userRouter);
-app.use("/api/sessions", sessionRouter);
+app.use("/", imagenRouter);
 app.use("/", viewsRouter);
+app.use("/", sessionRouter);
 
 
-//Login de usuario con Session: 
+//Iniciamos el servidor 
 
 app.listen(PUERTO, () => {
     console.log(`Escuchando en el puerto: ${PUERTO}`);
-});
+})

@@ -1,18 +1,27 @@
-<form action="/api/users" method="post">
-    <label for="first_name">First Name:</label>
-    <input type="text" id="first_name" name="first_name" required>
-    <br>
-    <label for="last_name">Last Name:</label>
-    <input type="text" id="last_name" name="last_name" required>
-    <br>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required>
-    <br>
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-    <br>
-    <label for="age">Age:</label>
-    <input type="number" id="age" name="age" required>
-    <br>
-    <button type="submit">Register</button>
-</form>
+<div class="upload">
+    <form action="/register" method="POST" class="upload__container">
+        <h2>Registro</h2>
+
+        <div class="upload__container--title">
+            <input type="text" name="first_name" placeholder="Nombre" required>
+        </div>
+
+        <div class="upload__container--title">
+            <input type="text" name="last_name" placeholder="Apellido" required>
+        </div>
+
+        <div class="upload__container--title">
+            <input type="text" name="email" placeholder="Correo electónico" required>
+        </div>
+
+        <div class="upload__container--title">
+            <input type="number" name="age" placeholder="Edad" required >
+        </div>
+
+        <div class="upload__container--title">
+            <input type="text" name="password" placeholder="Contraseña" required>
+        </div>
+
+        <button class="btn" type="submit"> Registrarse </button>
+    </form>
+</div>
